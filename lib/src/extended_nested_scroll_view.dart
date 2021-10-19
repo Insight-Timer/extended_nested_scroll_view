@@ -631,12 +631,12 @@ class ExtendedNestedScrollViewState extends State<ExtendedNestedScrollView> {
 
   @override
   Widget build(BuildContext context) {
-    final ScrollPhysics _scrollPhysics =
-        widget.physics?.applyTo(const ClampingScrollPhysics()) ??
-            widget.scrollBehavior
-                ?.getScrollPhysics(context)
-                .applyTo(const ClampingScrollPhysics()) ??
-            const ClampingScrollPhysics();
+    // final ScrollPhysics _scrollPhysics =
+    //     widget.physics?.applyTo(const ClampingScrollPhysics()) ??
+    //         widget.scrollBehavior
+    //             ?.getScrollPhysics(context)
+    //             .applyTo(const ClampingScrollPhysics()) ??
+    //         const ClampingScrollPhysics();
 
     return _InheritedNestedScrollView(
       state: this,
@@ -647,7 +647,7 @@ class ExtendedNestedScrollViewState extends State<ExtendedNestedScrollView> {
             dragStartBehavior: widget.dragStartBehavior,
             scrollDirection: widget.scrollDirection,
             reverse: widget.reverse,
-            physics: _scrollPhysics,
+            // physics: _scrollPhysics,
             scrollBehavior: widget.scrollBehavior ??
                 ScrollConfiguration.of(context).copyWith(scrollbars: false),
             controller: _coordinator!._outerController,
@@ -670,7 +670,7 @@ class _NestedScrollViewCustomScrollView extends CustomScrollView {
   const _NestedScrollViewCustomScrollView({
     required Axis scrollDirection,
     required bool reverse,
-    required ScrollPhysics physics,
+    // required ScrollPhysics physics,
     required ScrollBehavior scrollBehavior,
     required ScrollController controller,
     required List<Widget> slivers,
@@ -681,7 +681,7 @@ class _NestedScrollViewCustomScrollView extends CustomScrollView {
   }) : super(
           scrollDirection: scrollDirection,
           reverse: reverse,
-          physics: physics,
+          // physics: physics,
           scrollBehavior: scrollBehavior,
           controller: controller,
           slivers: slivers,
