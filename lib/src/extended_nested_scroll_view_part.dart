@@ -34,8 +34,7 @@ class _ExtendedNestedScrollCoordinator extends _NestedScrollCoordinator {
 
   /// Get the total height of pinned header in NestedScrollView header.
 
-  final NestedScrollViewPinnedHeaderSliverHeightBuilder?
-      pinnedHeaderSliverHeightBuilder;
+  final NestedScrollViewPinnedHeaderSliverHeightBuilder? pinnedHeaderSliverHeightBuilder;
 
   /// When [ExtendedNestedScrollView]'s body has [TabBarView]/[PageView] and
   /// their children have AutomaticKeepAliveClientMixin or PageStorageKey,
@@ -51,25 +50,20 @@ class _ExtendedNestedScrollCoordinator extends _NestedScrollCoordinator {
   final Axis scrollDirection;
 
   @override
-  _ExtendedNestedScrollController get _innerController =>
-      super._innerController as _ExtendedNestedScrollController;
+  _ExtendedNestedScrollController get _innerController => super._innerController as _ExtendedNestedScrollController;
 
   /// The [TabBarView]/[PageView] in body should perpendicular with The Axis of
   /// [ExtendedNestedScrollView].
-  Axis get bodyScrollDirection =>
-      scrollDirection == Axis.vertical ? Axis.horizontal : Axis.vertical;
+  Axis get bodyScrollDirection => scrollDirection == Axis.vertical ? Axis.horizontal : Axis.vertical;
 
   @override
   Iterable<_ExtendedNestedScrollPosition> get _innerPositions {
     if (_innerController.nestedPositions.length > 1 && onlyOneScrollInBody) {
-      final Iterable<_ExtendedNestedScrollPosition> actived = _innerController
-          .nestedPositions
-          .where((_ExtendedNestedScrollPosition element) => element.isActived);
+      final Iterable<_ExtendedNestedScrollPosition> actived =
+          _innerController.nestedPositions.where((_ExtendedNestedScrollPosition element) => element.isActived);
       if (actived.isEmpty) {
-        for (final _ExtendedNestedScrollPosition scrollPosition
-            in _innerController.nestedPositions) {
-          final RenderObject? renderObject =
-              scrollPosition.context.storageContext.findRenderObject();
+        for (final _ExtendedNestedScrollPosition scrollPosition in _innerController.nestedPositions) {
+          final RenderObject? renderObject = scrollPosition.context.storageContext.findRenderObject();
           if (renderObject == null || !renderObject.attached) {
             continue;
           }
@@ -96,23 +90,35 @@ class _ExtendedNestedScrollCoordinator extends _NestedScrollCoordinator {
     // The implementation has to return the children in paint order skipping all
     // children that are not semantically relevant (e.g. because they are
     // invisible).
-    parent.visitChildrenForSemantics((RenderObject child) {
-      if (renderObject == child) {
-        visible = true;
-      } else {
-        visible = childIsVisible(child, renderObject);
-      }
-    });
-    return visible;
+
+    //max : when  geomeory is null it seems to cause error because in the viewport flutter sdk
+    // has this line : liver.geometry!.visible || sliver.geometry!.cacheExtent > 0.0
+    // I'm not sure this is the correct handling or once upgrade to new version might fixed
+    // so leave it like this until we upgrade to new Flutter SDK
+    // ignore: invalid_use_of_protected_member
+    if (parent is RenderViewportBase && parent.childrenInPaintOrder.any((RenderSliver e) => e.geometry == null)) {
+      return false;
+    }
+
+    try {
+      parent.visitChildrenForSemantics((RenderObject child) {
+        if (renderObject == child) {
+          visible = true;
+        } else {
+          visible = childIsVisible(child, renderObject);
+        }
+      });
+      return visible;
+    } catch (_) {
+      return false;
+    }
   }
 
   bool renderObjectIsVisible(RenderObject renderObject, Axis axis) {
     final RenderViewport? parent = findParentRenderViewport(renderObject);
     if (parent != null && parent.axis == axis) {
-      for (final RenderSliver childrenInPaint
-          in parent.childrenInHitTestOrder) {
-        return childIsVisible(childrenInPaint, renderObject) &&
-            renderObjectIsVisible(parent, axis);
+      for (final RenderSliver childrenInPaint in parent.childrenInHitTestOrder) {
+        return childIsVisible(childrenInPaint, renderObject) && renderObjectIsVisible(parent, axis);
       }
     }
     return true;
@@ -140,9 +146,7 @@ class _ExtendedNestedScrollCoordinator extends _NestedScrollCoordinator {
   void updateCanDrag({_NestedScrollPosition? position}) {
     double maxInnerExtent = 0.0;
 
-    if (onlyOneScrollInBody &&
-        position != null &&
-        position.debugLabel == 'inner') {
+    if (onlyOneScrollInBody && position != null && position.debugLabel == 'inner') {
       if (position.haveDimensions) {
         maxInnerExtent = math.max(
           maxInnerExtent,
@@ -179,21 +183,18 @@ class _ExtendedNestedScrollController extends _NestedScrollController {
           debugLabel: debugLabel,
         );
   @override
-  _ExtendedNestedScrollCoordinator get coordinator =>
-      super.coordinator as _ExtendedNestedScrollCoordinator;
+  _ExtendedNestedScrollCoordinator get coordinator => super.coordinator as _ExtendedNestedScrollCoordinator;
 
   @override
   Iterable<_ExtendedNestedScrollPosition> get nestedPositions =>
       kDebugMode ? _debugNestedPositions : _releaseNestedPositions;
 
   Iterable<_ExtendedNestedScrollPosition> get _debugNestedPositions {
-    return Iterable.castFrom<ScrollPosition, _ExtendedNestedScrollPosition>(
-        positions);
+    return Iterable.castFrom<ScrollPosition, _ExtendedNestedScrollPosition>(positions);
   }
 
   Iterable<_ExtendedNestedScrollPosition> get _releaseNestedPositions sync* {
-    yield* Iterable.castFrom<ScrollPosition, _ExtendedNestedScrollPosition>(
-        positions);
+    yield* Iterable.castFrom<ScrollPosition, _ExtendedNestedScrollPosition>(positions);
   }
 
   @override
@@ -240,8 +241,7 @@ class _ExtendedNestedScrollPosition extends _NestedScrollPosition {
           initialPixels: initialPixels,
         );
   @override
-  _ExtendedNestedScrollCoordinator get coordinator =>
-      super.coordinator as _ExtendedNestedScrollCoordinator;
+  _ExtendedNestedScrollCoordinator get coordinator => super.coordinator as _ExtendedNestedScrollCoordinator;
 
   @override
   void applyNewDimensions() {
@@ -251,10 +251,8 @@ class _ExtendedNestedScrollPosition extends _NestedScrollPosition {
 
   @override
   bool applyContentDimensions(double minScrollExtent, double maxScrollExtent) {
-    if (debugLabel == 'outer' &&
-        coordinator.pinnedHeaderSliverHeightBuilder != null) {
-      maxScrollExtent =
-          maxScrollExtent - coordinator.pinnedHeaderSliverHeightBuilder!();
+    if (debugLabel == 'outer' && coordinator.pinnedHeaderSliverHeightBuilder != null) {
+      maxScrollExtent = maxScrollExtent - coordinator.pinnedHeaderSliverHeightBuilder!();
       maxScrollExtent = math.max(0.0, maxScrollExtent);
     }
     return super.applyContentDimensions(minScrollExtent, maxScrollExtent);
@@ -278,21 +276,18 @@ class _ExtendedNestedScrollPosition extends _NestedScrollPosition {
   }
 }
 
-class _ExtendedSliverFillRemainingWithScrollable
-    extends SingleChildRenderObjectWidget {
+class _ExtendedSliverFillRemainingWithScrollable extends SingleChildRenderObjectWidget {
   const _ExtendedSliverFillRemainingWithScrollable({
     Key? key,
     Widget? child,
   }) : super(key: key, child: child);
 
   @override
-  _ExtendedRenderSliverFillRemainingWithScrollable createRenderObject(
-          BuildContext context) =>
+  _ExtendedRenderSliverFillRemainingWithScrollable createRenderObject(BuildContext context) =>
       _ExtendedRenderSliverFillRemainingWithScrollable();
 }
 
-class _ExtendedRenderSliverFillRemainingWithScrollable
-    extends RenderSliverFillRemainingWithScrollable {}
+class _ExtendedRenderSliverFillRemainingWithScrollable extends RenderSliverFillRemainingWithScrollable {}
 
 // this is a bug that the out postion is not overscroll actually and it get minimal value
 // do under code will scroll inner positions
