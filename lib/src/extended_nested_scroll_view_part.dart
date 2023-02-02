@@ -96,14 +96,30 @@ class _ExtendedNestedScrollCoordinator extends _NestedScrollCoordinator {
     // The implementation has to return the children in paint order skipping all
     // children that are not semantically relevant (e.g. because they are
     // invisible).
-    parent.visitChildrenForSemantics((RenderObject child) {
-      if (renderObject == child) {
-        visible = true;
-      } else {
-        visible = childIsVisible(child, renderObject);
-      }
-    });
-    return visible;
+
+    //max : when  geomeory is null it seems to cause error because in the viewport flutter sdk
+    // has this line : liver.geometry!.visible || sliver.geometry!.cacheExtent > 0.0
+    // I'm not sure this is the correct handling or once upgrade to new version might fixed
+    // so leave it like this until we upgrade to new Flutter SDK
+    // ignore: invalid_use_of_protected_member
+    if (parent is RenderViewportBase &&
+        parent.childrenInPaintOrder
+            .any((RenderSliver e) => e.geometry == null)) {
+      return false;
+    }
+
+    try {
+      parent.visitChildrenForSemantics((RenderObject child) {
+        if (renderObject == child) {
+          visible = true;
+        } else {
+          visible = childIsVisible(child, renderObject);
+        }
+      });
+      return visible;
+    } catch (_) {
+      return false;
+    }
   }
 
   bool renderObjectIsVisible(RenderObject renderObject, Axis axis) {

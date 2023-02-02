@@ -350,6 +350,7 @@ class ExtendedNestedScrollView extends StatefulWidget {
     this.scrollBehavior,
     this.pinnedHeaderSliverHeightBuilder,
     this.onlyOneScrollInBody = false,
+    this.dragEnabled = true,
   })  : assert(scrollDirection != null),
         assert(reverse != null),
         assert(headerSliverBuilder != null),
@@ -463,6 +464,11 @@ class ExtendedNestedScrollView extends StatefulWidget {
   /// [Scrollable] widgets, particularly whether to treat them as one scrollable,
   /// or separate and desirous of unique behaviors.
   final ScrollBehavior? scrollBehavior;
+
+  /// Whether the user can drag to scroll the header
+  ///
+  /// Defaults to true
+  final bool dragEnabled;
 
   /// Returns the [SliverOverlapAbsorberHandle] of the nearest ancestor
   /// [ExtendedNestedScrollView].
@@ -631,13 +637,13 @@ class ExtendedNestedScrollViewState extends State<ExtendedNestedScrollView> {
 
   @override
   Widget build(BuildContext context) {
-    final ScrollPhysics _scrollPhysics =
-        widget.physics?.applyTo(const ClampingScrollPhysics()) ??
-            widget.scrollBehavior
-                ?.getScrollPhysics(context)
-                .applyTo(const ClampingScrollPhysics()) ??
-            const ClampingScrollPhysics();
-
+    // final ScrollPhysics _scrollPhysics =
+    //     widget.physics?.applyTo(const ClampingScrollPhysics()) ??
+    //         widget.scrollBehavior
+    //             ?.getScrollPhysics(context)
+    //             .applyTo(const ClampingScrollPhysics()) ??
+    //         const ClampingScrollPhysics();
+    _coordinator!.updateDragEnabled(widget.dragEnabled);
     return _InheritedNestedScrollView(
       state: this,
       child: Builder(
@@ -647,7 +653,7 @@ class ExtendedNestedScrollViewState extends State<ExtendedNestedScrollView> {
             dragStartBehavior: widget.dragStartBehavior,
             scrollDirection: widget.scrollDirection,
             reverse: widget.reverse,
-            physics: _scrollPhysics,
+            // physics: _scrollPhysics,
             scrollBehavior: widget.scrollBehavior ??
                 ScrollConfiguration.of(context).copyWith(scrollbars: false),
             controller: _coordinator!._outerController,
@@ -670,7 +676,7 @@ class _NestedScrollViewCustomScrollView extends CustomScrollView {
   const _NestedScrollViewCustomScrollView({
     required Axis scrollDirection,
     required bool reverse,
-    required ScrollPhysics physics,
+    // required ScrollPhysics physics,
     required ScrollBehavior scrollBehavior,
     required ScrollController controller,
     required List<Widget> slivers,
@@ -681,7 +687,7 @@ class _NestedScrollViewCustomScrollView extends CustomScrollView {
   }) : super(
           scrollDirection: scrollDirection,
           reverse: reverse,
-          physics: physics,
+          // physics: physics,
           scrollBehavior: scrollBehavior,
           controller: controller,
           slivers: slivers,
@@ -804,6 +810,7 @@ class _NestedScrollCoordinator
   ScrollController? _parent;
   final VoidCallback _onHasScrolledBodyChanged;
   final bool _floatHeaderSlivers;
+  bool _dragEnabled = true;
 
   late _NestedScrollController _outerController;
   late _NestedScrollController _innerController;
@@ -911,6 +918,7 @@ class _NestedScrollCoordinator
     // the center" but there isn't currently a good way to do that so we
     // arbitrarily pick the one that is the furthest away from the infinity we
     // are heading towards.
+    if (!_dragEnabled) velocity = 0.0;
     _NestedScrollPosition? innerPosition;
     if (velocity != 0.0) {
       for (final _NestedScrollPosition position in _innerPositions) {
@@ -1218,7 +1226,7 @@ class _NestedScrollCoordinator
       delta > 0.0 ? ScrollDirection.forward : ScrollDirection.reverse,
     );
     assert(delta != 0.0);
-    if (_innerPositions.isEmpty) {
+    if (_innerPositions.isEmpty && _dragEnabled) {
       _outerPosition!.applyFullDragUpdate(delta);
     } else if (delta < 0.0) {
       // Dragging "up"
@@ -1236,7 +1244,7 @@ class _NestedScrollCoordinator
           outerDelta = math.max(outerDelta, potentialOuterDelta);
         }
       }
-      if (outerDelta != 0.0) {
+      if (outerDelta != 0.0 && _dragEnabled) {
         final double innerDelta = _outerPosition!.applyClampedDragUpdate(
           outerDelta,
         );
@@ -1249,7 +1257,7 @@ class _NestedScrollCoordinator
       // Dragging "down" - delta is positive
       double innerDelta = delta;
       // Apply delta to the outer header first if it is configured to float.
-      if (_floatHeaderSlivers)
+      if (_floatHeaderSlivers && _dragEnabled)
         innerDelta = _outerPosition!.applyClampedDragUpdate(delta);
 
       if (innerDelta.notZero) {
@@ -1265,7 +1273,7 @@ class _NestedScrollCoordinator
           outerDelta = math.max(outerDelta, overscroll);
           overscrolls.add(overscroll);
         }
-        if (outerDelta != 0.0)
+        if (outerDelta != 0.0 && _dragEnabled)
           outerDelta -= _outerPosition!.applyClampedDragUpdate(outerDelta);
 
         // Now deal with any overscroll
@@ -1292,6 +1300,8 @@ class _NestedScrollCoordinator
       _parent ?? PrimaryScrollController.of(_state.context),
     );
   }
+
+  void updateDragEnabled(bool dragEnabled) => _dragEnabled = dragEnabled;
 
   @mustCallSuper
   void dispose() {
