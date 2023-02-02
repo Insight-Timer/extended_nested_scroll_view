@@ -1,8 +1,9 @@
+// ignore_for_file: unnecessary_cast
+
 import 'dart:async';
-import 'package:ff_annotation_route_library/ff_annotation_route_library.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
+import 'package:ff_annotation_route_library/ff_annotation_route_library.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:loading_more_list/loading_more_list.dart';
 
@@ -52,24 +53,26 @@ class PingLunDemo extends StatefulWidget {
 
 class _PingLunDemoState extends State<PingLunDemo>
     with TickerProviderStateMixin {
-  TabController primaryTC;
+  late final TabController primaryTC;
   ScrollController sc = ScrollController();
   TextEditingController tc = TextEditingController();
   final FocusNode _focusNode = FocusNode()..canRequestFocus = false;
-  Timer _timer;
+  Timer? _timer;
   bool _isAnimating = false;
   bool _isTapped = false;
+
   @override
   void initState() {
     primaryTC = TabController(length: 2, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((Duration callback) {
+    (WidgetsBinding.instance as WidgetsBinding)
+        .addPostFrameCallback((Duration callback) {
       _isAnimating = true;
       sc
-          .animateTo(200.0,
-              duration: const Duration(
-                milliseconds: 300,
-              ),
-              curve: Curves.easeIn)
+          .animateTo(
+            200.0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeIn,
+          )
           .whenComplete(() => _isAnimating = false);
     });
     sc.addListener(() {
@@ -155,8 +158,6 @@ class _PingLunDemoState extends State<PingLunDemo>
       pinnedHeaderSliverHeightBuilder: () {
         return 200.0;
       },
-      //2.[inner scrollables in tabview sync issue](https://github.com/flutter/flutter/issues/21868)
-      onlyOneScrollInBody: true,
       body: Material(
         child: Column(
           children: <Widget>[
@@ -179,7 +180,8 @@ class _PingLunDemoState extends State<PingLunDemo>
                 children: <Widget>[
                   GlowNotificationWidget(
                     ListView.builder(
-                      //store Page state
+                      // store Page state
+                      // and the list will be disposed
                       key: const PageStorageKey<String>('Tab0'),
                       itemBuilder: (BuildContext c, int i) {
                         return Container(
@@ -196,6 +198,7 @@ class _PingLunDemoState extends State<PingLunDemo>
                   GlowNotificationWidget(
                     ListView.builder(
                       //store Page state
+                      // and the list will be disposed
                       key: const PageStorageKey<String>('Tab1'),
                       itemBuilder: (BuildContext c, int i) {
                         return Container(
@@ -261,8 +264,10 @@ class _PingLunDemoState extends State<PingLunDemo>
   pageRouteType: PageRouteType.transparent,
 )
 class TextFieldPage extends StatefulWidget {
-  const TextFieldPage({this.text});
+  const TextFieldPage({required this.text});
+
   final String text;
+
   @override
   _TextFieldPageState createState() => _TextFieldPageState();
 }
@@ -270,11 +275,12 @@ class TextFieldPage extends StatefulWidget {
 class _TextFieldPageState extends State<TextFieldPage> {
   TextEditingController tc = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+
   @override
   void initState() {
+    super.initState();
     tc.text = widget.text;
     tc.selection = TextSelection.collapsed(offset: widget.text.length);
-    super.initState();
   }
 
   @override

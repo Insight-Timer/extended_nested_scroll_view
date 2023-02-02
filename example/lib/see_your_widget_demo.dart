@@ -45,12 +45,13 @@ class MyAppState extends State<MyApp> {
             ],
           ),
           onNotification: (ScrollNotification scroll) {
-            final BuildContext currentContext = key.currentContext;
+            final BuildContext? currentContext = key.currentContext;
             if (currentContext == null) {
               return false;
             }
             //final double screenHeight = MediaQuery.of(currentContext).size.height;
-            final RenderObject renderObject = currentContext.findRenderObject();
+            final RenderObject renderObject =
+                currentContext.findRenderObject()!;
             final RenderAbstractViewport viewport =
                 RenderAbstractViewport.of(renderObject);
 
@@ -111,7 +112,7 @@ class MyAppState extends State<MyApp> {
 }
 
 class MyWidget extends StatefulWidget {
-  const MyWidget({Key key}) : super(key: key);
+  const MyWidget({Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => MyWidgetState();

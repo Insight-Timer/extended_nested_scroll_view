@@ -17,6 +17,7 @@ NestedScrollView: extended nested scroll view to fix following issues.
 - [extended_nested_scroll_view](#extended_nested_scroll_view)
 - [Example for issue 1](#example-for-issue-1)
 - [Example for issue 2](#example-for-issue-2)
+  - [ExtendedVisibilityDetector](#extendedvisibilitydetector)
 - [Do without ScrollController in NestedScrollView's body](#do-without-scrollcontroller-in-nestedscrollviews-body)
 # Example for issue 1
 
@@ -38,25 +39,48 @@ give total height of pinned sliver headers in pinnedHeaderSliverHeightBuilder ca
 ```
 # Example for issue 2
 
+We usually keep list scroll position with following: 
+
+| scene                       | onlyOneScrollInBody | description                                                  |
+| ----------------------------- | ------------------- | ------------------------------------------------------------ |
+| AutomaticKeepAliveClientMixin | true                | ScrollPosition will not be disposed, set onlyOneScrollInBody to true so that we can know which list is isActived. |
+| PageStorageKey                | false               | ScrollPosition will be disposed, PageStorageKey just record the position info,the scroll positions in ExtendedNestedScrollView will always single one. |
+
+
+
+
 ``` dart
     ExtendedNestedScrollView(
        onlyOneScrollInBody: true,
     )
-``` 
+```
+
+## ExtendedVisibilityDetector
+
+Provide ExtendedVisibilityDetector to point out which list is visible
+
+``` dart
+   ExtendedVisibilityDetector(
+      uniqueKey: const Key('Tab1'),
+      child: ListView(),
+   )
+```
+
+
 # Do without ScrollController in NestedScrollView's body
 
 * due to we can't set ScrollController for list in NestedScrollView's body(it will breaking behaviours of InnerScrollController in NestedScrollView),provide Demos
   
-* [pull to refresh](https://github.com/fluttercandies/extended_nested_scroll_view/tree/master/example/lib/pages/pull_to_refresh.dart)
+* [pull to refresh](https://github.com/fluttercandies/extended_nested_scroll_view/tree/master/example/lib/pages/complex/pull_to_refresh.dart)
   
-* [load more](https://github.com/fluttercandies/extended_nested_scroll_view/tree/master/example/lib/pages/load_more.dart) 
+* [load more](https://github.com/fluttercandies/extended_nested_scroll_view/tree/master/example/lib/pages/complex/load_more.dart) 
   
-* [scroll to top](https://github.com/fluttercandies/extended_nested_scroll_view/tree/master/example/lib/pages/scroll_to_top.dart) 
+* [scroll to top](https://github.com/fluttercandies/extended_nested_scroll_view/tree/master/example/lib/pages/complex/scroll_to_top.dart) 
   
   show how to do it without ScrollController
 
 
-* [pinned header height](https://github.com/fluttercandies/extended_nested_scroll_view/tree/master/example/lib/pages/dynamic_pinned_header_height.dart) 
+* [pinned header height](https://github.com/fluttercandies/extended_nested_scroll_view/tree/master/example/lib/pages/simple/dynamic_pinned_header_height.dart) 
 
   show how to change pinned header height dynamically.
 
