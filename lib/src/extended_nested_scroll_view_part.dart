@@ -364,3 +364,15 @@ class _ExtendedNestedInnerBallisticScrollActivity
     return delegate.setPixels(coordinator.nestOffset(value, delegate)).isZero;
   }
 }
+
+extension ExtendedNestedScrollPositionJump on ScrollPosition {
+  /// Jumps this position alone, leaving the rest of its nested scroll view where it is.
+  void jumpToWithoutNesting(double value) {
+    final ScrollPosition position = this;
+    if (position is _NestedScrollPosition) {
+      position.localJumpTo(value);
+    } else {
+      position.jumpTo(value);
+    }
+  }
+}
